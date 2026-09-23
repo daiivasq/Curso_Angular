@@ -1,5 +1,8 @@
-import { computed, Injectable, signal } from '@angular/core';
-import { Actividad, EstadoActividad } from '../modelos/actividad';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { AlmacenamientoService } from '../compartido/almacenamiento';
+import { Actividad, EstadoActividad, esColeccionActividades } from '../modelos/actividad';
+
+const CLAVE = 'panel.actividades.v1';
 
 const INICIALES: readonly Actividad[] = [
   { id: 1, titulo: 'Preparar estructura HTML', estado: 'completada', prioridad: 'alta', creadaEn: '2026-08-10', destacada: false },
@@ -11,9 +14,12 @@ const INICIALES: readonly Actividad[] = [
 
 @Injectable({ providedIn: 'root' })
 export class ActividadesService {
+  private readonly almacen = inject(AlmacenamientoService);
   private readonly lista = signal<Actividad[]>(INICIALES.map((actividad) => ({ ...actividad })));
 
   readonly actividades = this.lista.asReadonly();
+  readonly aviso = signal('');
+  readonly sinGuardar = signal(false);
   readonly total = computed(() => this.lista().length);
   readonly pendientes = computed(
     () => this.lista().filter((actividad) => actividad.estado === 'pendiente').length,
@@ -28,12 +34,22 @@ export class ActividadesService {
     this.total() === 0 ? 0 : Math.round((this.completadas() / this.total()) * 100),
   );
 
+  constructor() {
+    this.cargar();
+
+    window.addEventListener('storage', (evento) => {
+      if (evento.key === CLAVE) {
+        this.cargar();
+      }
+    });
+  }
+
   buscarPorId(id: number): Actividad | undefined {
     return this.lista().find((actividad) => actividad.id === id);
   }
 
   alternarDestacada(id: number): void {
-    this.lista.update((actual) =>
+    this.aplicar((actual) =>
       actual.map((actividad) =>
         actividad.id === id ? { ...actividad, destacada: !actividad.destacada } : actividad,
       ),
@@ -41,7 +57,7 @@ export class ActividadesService {
   }
 
   avanzarEstado(id: number): void {
-    this.lista.update((actual) =>
+    this.aplicar((actual) =>
       actual.map((actividad) =>
         actividad.id === id
           ? { ...actividad, estado: this.siguienteEstado(actividad.estado) }
@@ -51,11 +67,34 @@ export class ActividadesService {
   }
 
   eliminar(id: number): void {
-    this.lista.update((actual) => actual.filter((actividad) => actividad.id !== id));
+    this.aplicar((actual) => actual.filter((actividad) => actividad.id !== id));
   }
 
   vaciar(): void {
-    this.lista.set([]);
+    this.aplicar(() => []);
+  }
+
+  private aplicar(cambio: (actual: Actividad[]) => Actividad[]): void {
+    this.lista.update(cambio);
+    this.guardar();
+  }
+
+  private guardar(): void {
+    this.sinGuardar.set(!this.almacen.guardar(CLAVE, this.lista()));
+  }
+
+  private cargar(): void {
+    if (!this.almacen.existe(CLAVE)) {
+      return;
+    }
+
+    const valor = this.almacen.leer(CLAVE);
+    if (!esColeccionActividades(valor)) {
+      this.aviso.set('Lo que había guardado no se pudo leer. Empiezas con las actividades de ejemplo.');
+      return;
+    }
+
+    this.lista.set(valor.map((actividad) => ({ ...actividad })));
   }
 
   private siguienteEstado(estado: EstadoActividad): EstadoActividad {

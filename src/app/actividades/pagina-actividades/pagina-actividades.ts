@@ -21,6 +21,8 @@ export class PaginaActividades {
   private readonly servicio = inject(ActividadesService);
 
   protected readonly actividades = this.servicio.actividades;
+  protected readonly aviso = this.servicio.aviso;
+  protected readonly sinGuardar = this.servicio.sinGuardar;
 
   protected readonly termino = signal('');
   protected readonly filtroEstado = signal<FiltroEstado>('todas');
