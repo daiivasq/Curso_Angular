@@ -6,9 +6,11 @@ import {
   FiltroPrioridad,
   Prioridad,
 } from '../../modelos/actividad';
+import { ResumenActividades } from '../resumen-actividades/resumen-actividades';
 
 @Component({
   selector: 'app-pagina-actividades',
+  imports: [ResumenActividades],
   templateUrl: './pagina-actividades.html',
   styleUrl: './pagina-actividades.css',
 })
