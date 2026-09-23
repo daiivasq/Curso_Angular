@@ -1,5 +1,6 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import {
   FiltroEstado,
   FiltroPrioridad,
@@ -13,7 +14,7 @@ import { ActividadesService } from '../actividades';
 
 @Component({
   selector: 'app-pagina-actividades',
-  imports: [ResumenActividades, ListaActividades, FiltrosActividades, PanelSeccion],
+  imports: [ResumenActividades, ListaActividades, FiltrosActividades, PanelSeccion, RouterLink],
   templateUrl: './pagina-actividades.html',
   styleUrl: './pagina-actividades.css',
 })
