@@ -1,5 +1,5 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ActividadesService } from '../actividades';
 import { Actividad, ETIQUETAS } from '../../modelos/actividad';
 
@@ -16,6 +16,7 @@ type Resultado =
 })
 export class DetalleActividad {
   private readonly servicio = inject(ActividadesService);
+  private readonly router = inject(Router);
 
   readonly id = input.required<string>();
 
@@ -38,4 +39,12 @@ export class DetalleActividad {
   });
 
   protected readonly etiquetas = ETIQUETAS;
+
+  protected eliminar(): void {
+    const actividad = this.actividad();
+    if (!actividad) return;
+
+    this.servicio.eliminar(actividad.id);
+    this.router.navigate(['/actividades'], { replaceUrl: true });
+  }
 }

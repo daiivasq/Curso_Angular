@@ -8,6 +8,9 @@
         <p>Prioridad {{ actividad.prioridad }}</p>
         <p>{{ etiquetas[actividad.estado] }}</p>
         <p>Creada el {{ actividad.creadaEn }}</p>
+        <button type="button" [attr.aria-label]="'Eliminar ' + actividad.titulo" (click)="eliminar()">
+          Eliminar
+        </button>
       </article>
     }
   }
