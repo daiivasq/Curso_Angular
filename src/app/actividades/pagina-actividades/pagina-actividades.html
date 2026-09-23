@@ -5,59 +5,35 @@
     <p class="seleccion">Seleccionada: <strong>{{ elegida.titulo }}</strong> · creada el {{ elegida.creadaEn }}</p>
   }
 
-  <section aria-labelledby="titulo-resumen">
-    <h3 id="titulo-resumen">Resumen</h3>
+  <app-panel-seccion titulo="Resumen">
     <app-resumen-actividades
       [total]="total()"
       [pendientes]="pendientes()"
       [enProgreso]="enProgreso()"
       [completadas]="completadas()"
       [porcentaje]="porcentaje()" />
-  </section>
+  </app-panel-seccion>
 
-  <section aria-labelledby="titulo-filtros">
-    <h3 id="titulo-filtros">Buscar y filtrar</h3>
-    <div class="controles">
-      <div class="campo">
-        <label for="busqueda">Buscar por título</label>
-        <input id="busqueda" type="search" [value]="termino()" (input)="buscar($event)" />
-      </div>
-      <div class="campo">
-        <label for="filtro-estado">Estado</label>
-        <select id="filtro-estado" [value]="filtroEstado()" (change)="cambiarFiltroEstado($event)">
-          <option value="todas">Todos</option><option value="pendiente">Pendientes</option><option value="en_progreso">En progreso</option><option value="completada">Completadas</option>
-        </select>
-      </div>
-      <div class="campo">
-        <label for="filtro-prioridad">Prioridad</label>
-        <select id="filtro-prioridad" [value]="filtroPrioridad()" (change)="cambiarFiltroPrioridad($event)">
-          <option value="todas">Todas</option><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option>
-        </select>
-      </div>
-      <button type="button" [disabled]="!hayFiltros()" (click)="limpiarFiltros()">Limpiar filtros</button>
-    </div>
+  <app-panel-seccion titulo="Buscar y filtrar">
+    <app-filtros-actividades
+      [(termino)]="termino"
+      [(estado)]="filtroEstado"
+      [(prioridad)]="filtroPrioridad" />
     <p aria-live="polite">{{ mostradas() }} de {{ total() }} actividades visibles</p>
-  </section>
+  </app-panel-seccion>
 
-  <section aria-labelledby="titulo-actividades">
-    <h3 id="titulo-actividades">Actividades</h3>
-    <ul class="lista">
-      @for (actividad of visibles(); track actividad.id) {
-        <li>
-          <app-tarjeta-actividad
-            [actividad]="actividad"
-            [seleccionada]="seleccionadaId() === actividad.id"
-            (seleccionCambiada)="seleccionar($event)"
-            (destacadoCambiado)="alternarDestacada($event)"
-            (avanceSolicitado)="avanzarEstado($event)"
-            (eliminacionSolicitada)="eliminar($event)" />
-        </li>
-      } @empty {
-        <li class="vacio">
-          <p>{{ mensajeVacio() }}</p>
-          @if (hayFiltros()) { <button type="button" (click)="limpiarFiltros()">Quitar los filtros</button> }
-        </li>
-      }
-    </ul>
-  </section>
+  <app-panel-seccion titulo="Actividades">
+    <button acciones type="button" (click)="restablecer()">Vaciar el tablero</button>
+
+    <app-lista-actividades
+      [actividades]="visibles()"
+      [seleccionadaId]="seleccionadaId()"
+      [mensajeVacio]="mensajeVacio()"
+      [hayFiltros]="hayFiltros()"
+      (seleccionCambiada)="seleccionar($event)"
+      (destacadoCambiado)="alternarDestacada($event)"
+      (avanceSolicitado)="avanzarEstado($event)"
+      (eliminacionSolicitada)="eliminar($event)"
+      (limpiezaSolicitada)="limpiarFiltros()" />
+  </app-panel-seccion>
 </section>

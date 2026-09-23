@@ -7,11 +7,13 @@ import {
   Prioridad,
 } from '../../modelos/actividad';
 import { ResumenActividades } from '../resumen-actividades/resumen-actividades';
-import { TarjetaActividad } from '../tarjeta-actividad/tarjeta-actividad';
+import { ListaActividades } from '../lista-actividades/lista-actividades';
+import { FiltrosActividades } from '../filtros-actividades/filtros-actividades';
+import { PanelSeccion } from '../../compartido/panel-seccion/panel-seccion';
 
 @Component({
   selector: 'app-pagina-actividades',
-  imports: [ResumenActividades, TarjetaActividad],
+  imports: [ResumenActividades, ListaActividades, FiltrosActividades, PanelSeccion],
   templateUrl: './pagina-actividades.html',
   styleUrl: './pagina-actividades.css',
 })
@@ -71,22 +73,16 @@ export class PaginaActividades {
     this.seleccionadaId.update((actual) => actual === id ? null : id);
   }
 
-  protected buscar(evento: Event): void {
-    this.termino.set((evento.target as HTMLInputElement).value);
-  }
-
-  protected cambiarFiltroEstado(evento: Event): void {
-    this.filtroEstado.set((evento.target as HTMLSelectElement).value as FiltroEstado);
-  }
-
-  protected cambiarFiltroPrioridad(evento: Event): void {
-    this.filtroPrioridad.set((evento.target as HTMLSelectElement).value as FiltroPrioridad);
-  }
-
   protected limpiarFiltros(): void {
     this.termino.set('');
     this.filtroEstado.set('todas');
     this.filtroPrioridad.set('todas');
+  }
+
+  protected restablecer(): void {
+    this.actividades.set([]);
+    this.seleccionadaId.set(null);
+    this.limpiarFiltros();
   }
 
   private siguienteEstado(estado: EstadoActividad): EstadoActividad {
