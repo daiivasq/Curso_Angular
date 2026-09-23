@@ -27,11 +27,11 @@ export class PaginaActividades {
   protected readonly filtroPrioridad = signal<FiltroPrioridad>('todas');
   protected readonly seleccionadaId = signal<number | null>(null);
 
-  protected readonly total = computed(() => this.actividades().length);
-  protected readonly pendientes = computed(() => this.actividades().filter((actividad) => actividad.estado === 'pendiente').length);
-  protected readonly enProgreso = computed(() => this.actividades().filter((actividad) => actividad.estado === 'en_progreso').length);
-  protected readonly completadas = computed(() => this.actividades().filter((actividad) => actividad.estado === 'completada').length);
-  protected readonly porcentaje = computed(() => this.total() === 0 ? 0 : Math.round((this.completadas() / this.total()) * 100));
+  protected readonly total = this.servicio.total;
+  protected readonly pendientes = this.servicio.pendientes;
+  protected readonly enProgreso = this.servicio.enProgreso;
+  protected readonly completadas = this.servicio.completadas;
+  protected readonly porcentaje = this.servicio.porcentaje;
 
   protected readonly visibles = computed(() => {
     const termino = this.termino().trim().toLocaleLowerCase('es');

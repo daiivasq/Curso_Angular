@@ -15,6 +15,18 @@ export class ActividadesService {
 
   readonly actividades = this.lista.asReadonly();
   readonly total = computed(() => this.lista().length);
+  readonly pendientes = computed(
+    () => this.lista().filter((actividad) => actividad.estado === 'pendiente').length,
+  );
+  readonly enProgreso = computed(
+    () => this.lista().filter((actividad) => actividad.estado === 'en_progreso').length,
+  );
+  readonly completadas = computed(
+    () => this.lista().filter((actividad) => actividad.estado === 'completada').length,
+  );
+  readonly porcentaje = computed(() =>
+    this.total() === 0 ? 0 : Math.round((this.completadas() / this.total()) * 100),
+  );
 
   buscarPorId(id: number): Actividad | undefined {
     return this.lista().find((actividad) => actividad.id === id);
