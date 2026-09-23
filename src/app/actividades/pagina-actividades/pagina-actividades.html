@@ -44,17 +44,13 @@
     <ul class="lista">
       @for (actividad of visibles(); track actividad.id) {
         <li>
-          <article class="tarjeta" [class.destacada]="actividad.destacada" [class.seleccionada]="seleccionadaId() === actividad.id">
-            <h4>{{ actividad.titulo }}</h4>
-            <p class="prioridad prioridad-{{ actividad.prioridad }}">Prioridad {{ actividad.prioridad }}</p>
-            <p class="estado">{{ actividad.estado }}</p>
-            <div class="acciones">
-              <button type="button" [attr.aria-pressed]="seleccionadaId() === actividad.id" (click)="seleccionar(actividad.id)">{{ seleccionadaId() === actividad.id ? 'Quitar selección' : 'Seleccionar' }}</button>
-              <button type="button" (click)="alternarDestacada(actividad.id)">{{ actividad.destacada ? 'Quitar destacado' : 'Destacar' }}</button>
-              <button type="button" [disabled]="actividad.estado === 'completada'" (click)="avanzarEstado(actividad.id)">Avanzar estado</button>
-              <button type="button" [attr.aria-label]="'Eliminar ' + actividad.titulo" (click)="eliminar(actividad.id)">Eliminar</button>
-            </div>
-          </article>
+          <app-tarjeta-actividad
+            [actividad]="actividad"
+            [seleccionada]="seleccionadaId() === actividad.id"
+            (seleccionCambiada)="seleccionar($event)"
+            (destacadoCambiado)="alternarDestacada($event)"
+            (avanceSolicitado)="avanzarEstado($event)"
+            (eliminacionSolicitada)="eliminar($event)" />
         </li>
       } @empty {
         <li class="vacio">

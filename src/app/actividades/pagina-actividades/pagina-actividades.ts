@@ -7,10 +7,11 @@ import {
   Prioridad,
 } from '../../modelos/actividad';
 import { ResumenActividades } from '../resumen-actividades/resumen-actividades';
+import { TarjetaActividad } from '../tarjeta-actividad/tarjeta-actividad';
 
 @Component({
   selector: 'app-pagina-actividades',
-  imports: [ResumenActividades],
+  imports: [ResumenActividades, TarjetaActividad],
   templateUrl: './pagina-actividades.html',
   styleUrl: './pagina-actividades.css',
 })
