@@ -1,5 +1,5 @@
 import { computed, Injectable, signal } from '@angular/core';
-import { Actividad } from '../modelos/actividad';
+import { Actividad, EstadoActividad } from '../modelos/actividad';
 
 const INICIALES: readonly Actividad[] = [
   { id: 1, titulo: 'Preparar estructura HTML', estado: 'completada', prioridad: 'alta', creadaEn: '2026-08-10', destacada: false },
@@ -15,4 +15,40 @@ export class ActividadesService {
 
   readonly actividades = this.lista.asReadonly();
   readonly total = computed(() => this.lista().length);
+
+  buscarPorId(id: number): Actividad | undefined {
+    return this.lista().find((actividad) => actividad.id === id);
+  }
+
+  alternarDestacada(id: number): void {
+    this.lista.update((actual) =>
+      actual.map((actividad) =>
+        actividad.id === id ? { ...actividad, destacada: !actividad.destacada } : actividad,
+      ),
+    );
+  }
+
+  avanzarEstado(id: number): void {
+    this.lista.update((actual) =>
+      actual.map((actividad) =>
+        actividad.id === id
+          ? { ...actividad, estado: this.siguienteEstado(actividad.estado) }
+          : actividad,
+      ),
+    );
+  }
+
+  eliminar(id: number): void {
+    this.lista.update((actual) => actual.filter((actividad) => actividad.id !== id));
+  }
+
+  vaciar(): void {
+    this.lista.set([]);
+  }
+
+  private siguienteEstado(estado: EstadoActividad): EstadoActividad {
+    if (estado === 'pendiente') return 'en_progreso';
+    if (estado === 'en_progreso') return 'completada';
+    return 'completada';
+  }
 }

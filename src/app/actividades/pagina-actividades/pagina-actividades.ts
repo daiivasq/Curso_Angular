@@ -1,7 +1,5 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import {
-  Actividad,
-  EstadoActividad,
   FiltroEstado,
   FiltroPrioridad,
   Prioridad,
@@ -10,6 +8,7 @@ import { ResumenActividades } from '../resumen-actividades/resumen-actividades';
 import { ListaActividades } from '../lista-actividades/lista-actividades';
 import { FiltrosActividades } from '../filtros-actividades/filtros-actividades';
 import { PanelSeccion } from '../../compartido/panel-seccion/panel-seccion';
+import { ActividadesService } from '../actividades';
 
 @Component({
   selector: 'app-pagina-actividades',
@@ -19,14 +18,9 @@ import { PanelSeccion } from '../../compartido/panel-seccion/panel-seccion';
 })
 export class PaginaActividades {
   private readonly orden: Record<Prioridad, number> = { alta: 0, media: 1, baja: 2 };
+  private readonly servicio = inject(ActividadesService);
 
-  protected readonly actividades = signal<Actividad[]>([
-    { id: 1, titulo: 'Preparar estructura HTML', estado: 'completada', prioridad: 'alta', creadaEn: '2026-08-10', destacada: false },
-    { id: 2, titulo: 'Revisar contraste', estado: 'en_progreso', prioridad: 'media', creadaEn: '2026-08-12', destacada: true },
-    { id: 3, titulo: 'Practicar TypeScript', estado: 'pendiente', prioridad: 'alta', creadaEn: '2026-08-14', destacada: false },
-    { id: 4, titulo: 'Comprobar vista estrecha', estado: 'pendiente', prioridad: 'baja', creadaEn: '2026-08-16', destacada: false },
-    { id: 5, titulo: 'Ejecutar el build', estado: 'pendiente', prioridad: 'media', creadaEn: '2026-08-18', destacada: false },
-  ]);
+  protected readonly actividades = this.servicio.actividades;
 
   protected readonly termino = signal('');
   protected readonly filtroEstado = signal<FiltroEstado>('todas');
@@ -57,15 +51,15 @@ export class PaginaActividades {
   protected readonly seleccionada = computed(() => this.actividades().find((actividad) => actividad.id === this.seleccionadaId()) ?? null);
 
   protected alternarDestacada(id: number): void {
-    this.actividades.update((actuales) => actuales.map((actividad) => actividad.id === id ? { ...actividad, destacada: !actividad.destacada } : actividad));
+    this.servicio.alternarDestacada(id);
   }
 
   protected avanzarEstado(id: number): void {
-    this.actividades.update((actuales) => actuales.map((actividad) => actividad.id === id ? { ...actividad, estado: this.siguienteEstado(actividad.estado) } : actividad));
+    this.servicio.avanzarEstado(id);
   }
 
   protected eliminar(id: number): void {
-    this.actividades.update((actuales) => actuales.filter((actividad) => actividad.id !== id));
+    this.servicio.eliminar(id);
     this.seleccionadaId.update((actual) => actual === id ? null : actual);
   }
 
@@ -80,14 +74,8 @@ export class PaginaActividades {
   }
 
   protected restablecer(): void {
-    this.actividades.set([]);
-    this.seleccionadaId.set(null);
+    this.servicio.vaciar();
     this.limpiarFiltros();
-  }
-
-  private siguienteEstado(estado: EstadoActividad): EstadoActividad {
-    if (estado === 'pendiente') return 'en_progreso';
-    if (estado === 'en_progreso') return 'completada';
-    return 'completada';
+    this.seleccionadaId.set(null);
   }
 }
