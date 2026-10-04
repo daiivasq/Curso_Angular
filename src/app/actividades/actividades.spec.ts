@@ -34,4 +34,76 @@ describe('ActividadesService', () => {
     });
   });
 
+  describe('crear', () => {
+    it('recorta los espacios del título', () => {
+      const creada = servicio.crear('  Revisar el foco  ', '', 'alta');
+      expect(creada?.titulo).toBe('Revisar el foco');
+      http.expectOne((r) => r.method === 'POST').flush({ ...REMOTAS[0], id: 9, task_title: 'Revisar el foco' });
+    });
+    it('devuelve la actividad con su identificador y en pendiente', () => {
+      const creada = servicio.crear('Revisar el foco', '', 'alta');
+      expect(creada).not.toBeNull();
+      expect(creada?.id).toBeGreaterThan(0);
+      expect(creada?.estado).toBe('pendiente');
+      http.expectOne((r) => r.method === 'POST').flush({ ...REMOTAS[0], id: 9 });
+    });
+    it('rechaza un título de dos caracteres', () => {
+      expect(servicio.crear('ab', '', 'alta')).toBeNull();
+      expect(servicio.total()).toBe(3);
+    });
+    it('acepta uno de tres', () => {
+      expect(servicio.crear('abc', '', 'alta')).not.toBeNull();
+      http.expectOne((r) => r.method === 'POST').flush({ ...REMOTAS[0], id: 9 });
+    });
+    it('rechaza un título repetido sin distinguir mayúsculas', () => {
+      expect(servicio.crear('revisar EL informe', '', 'alta')).toBeNull();
+      expect(servicio.total()).toBe(3);
+    });
+  });
+
+  describe('avanzarEstado', () => {
+    it('lleva de pendiente a en progreso', () => {
+      servicio.avanzarEstado(1);
+      expect(servicio.buscarPorId(1)?.estado).toBe('en_progreso');
+      http.expectOne((r) => r.method === 'PUT').flush(REMOTAS[0]);
+    });
+    it('lleva de en progreso a completada', () => {
+      servicio.avanzarEstado(1);
+      http.expectOne((r) => r.method === 'PUT').flush(REMOTAS[0]);
+      servicio.avanzarEstado(1);
+      expect(servicio.buscarPorId(1)?.estado).toBe('completada');
+      http.expectOne((r) => r.method === 'PUT').flush(REMOTAS[0]);
+    });
+    it('deja completada una actividad ya completada', () => {
+      expect(servicio.buscarPorId(3)?.estado).toBe('completada');
+      servicio.avanzarEstado(3);
+      expect(servicio.buscarPorId(3)?.estado).toBe('completada');
+      http.expectOne((r) => r.method === 'PUT').flush(REMOTAS[2]);
+    });
+    it('no toca nada con un identificador que no existe', () => {
+      const antes = servicio.actividades();
+      servicio.avanzarEstado(999);
+      expect(servicio.actividades()).toBe(antes);
+    });
+  });
+
+  describe('eliminar', () => {
+    it('quita solo esa actividad', () => {
+      servicio.eliminar(2);
+      expect(servicio.total()).toBe(2);
+      expect(servicio.buscarPorId(2)).toBeUndefined();
+      http.expectOne((r) => r.method === 'DELETE').flush(null);
+    });
+    it('devuelve la actividad si el servidor la rechaza', () => {
+      servicio.eliminar(2);
+      http.expectOne((r) => r.method === 'DELETE').error(new ProgressEvent('error'), { status: 0 });
+      expect(servicio.total()).toBe(3);
+      expect(servicio.error()).toContain('No se pudo conectar');
+    });
+  });
+
+  describe('buscarPorId', () => {
+    it('devuelve undefined si no existe', () => expect(servicio.buscarPorId(999)).toBeUndefined());
+  });
+
 });
