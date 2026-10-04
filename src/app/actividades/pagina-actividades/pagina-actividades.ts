@@ -1,7 +1,9 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RouterLink } from '@angular/router';
 import {
+  Actividad,
   FiltroEstado,
   FiltroPrioridad,
   Prioridad,
@@ -11,6 +13,8 @@ import { ListaActividades } from '../lista-actividades/lista-actividades';
 import { FiltrosActividades } from '../filtros-actividades/filtros-actividades';
 import { PanelSeccion } from '../../compartido/panel-seccion/panel-seccion';
 import { ActividadesService } from '../actividades';
+import { ActividadesApi } from '../../api/actividades-api';
+import { debounceTime, of, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-pagina-actividades',
@@ -21,12 +25,13 @@ import { ActividadesService } from '../actividades';
 export class PaginaActividades {
   private readonly orden: Record<Prioridad, number> = { alta: 0, media: 1, baja: 2 };
   private readonly servicio = inject(ActividadesService);
+  private readonly api = inject(ActividadesApi);
   private readonly router = inject(Router);
   private readonly ruta = inject(ActivatedRoute);
 
   protected readonly actividades = this.servicio.actividades;
-  protected readonly aviso = this.servicio.aviso;
-  protected readonly sinGuardar = this.servicio.sinGuardar;
+  protected readonly cargando = this.servicio.cargando;
+  protected readonly errorCarga = this.servicio.error;
 
   readonly buscar = input<string | undefined>('');
   readonly estado = input<FiltroEstado | undefined>('todas');
@@ -36,6 +41,7 @@ export class PaginaActividades {
   protected readonly filtroEstado = computed(() => this.estado() ?? 'todas');
   protected readonly filtroPrioridad = computed(() => this.prioridad() ?? 'todas');
   protected readonly seleccionadaId = signal<number | null>(null);
+  protected readonly resultados = signal<Actividad[] | null>(null);
 
   protected readonly total = this.servicio.total;
   protected readonly pendientes = this.servicio.pendientes;
@@ -48,7 +54,7 @@ export class PaginaActividades {
     const estado = this.filtroEstado();
     const prioridad = this.filtroPrioridad();
 
-    return this.actividades()
+    return (this.resultados() ?? this.actividades())
       .filter((actividad) => termino === '' || actividad.titulo.toLocaleLowerCase('es').includes(termino))
       .filter((actividad) => estado === 'todas' || actividad.estado === estado)
       .filter((actividad) => prioridad === 'todas' || actividad.prioridad === prioridad)
@@ -59,6 +65,20 @@ export class PaginaActividades {
   protected readonly hayFiltros = computed(() => this.termino().trim() !== '' || this.filtroEstado() !== 'todas' || this.filtroPrioridad() !== 'todas');
   protected readonly mensajeVacio = computed(() => this.total() === 0 ? 'Todavía no hay actividades. Crea la primera para empezar.' : 'Ninguna actividad coincide con los filtros aplicados.');
   protected readonly seleccionada = computed(() => this.actividades().find((actividad) => actividad.id === this.seleccionadaId()) ?? null);
+
+  constructor() {
+    toObservable(this.termino)
+      .pipe(
+        debounceTime(300),
+        switchMap((termino) => (termino.trim() === '' ? of(null) : this.api.buscar(termino))),
+        takeUntilDestroyed(),
+      )
+      .subscribe((resultados) => this.resultados.set(resultados));
+  }
+
+  protected recargar(): void {
+    this.servicio.cargar();
+  }
 
   protected alternarDestacada(id: number): void {
     this.servicio.alternarDestacada(id);
